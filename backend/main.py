@@ -7,6 +7,7 @@
 """
 from fastapi import FastAPI
 
+from api.documents import router as documents_router
 from api.routes import api_router
 from core.config import settings
 from core.exceptions import register_exception_handlers
@@ -22,6 +23,9 @@ def create_app() -> FastAPI:
 
     register_exception_handlers(app)
     app.include_router(api_router, prefix=settings.api_v1_prefix)
+    app.include_router(
+        documents_router, prefix=f"{settings.api_v1_prefix}/documents", tags=["documents"]
+    )
 
     return app
 
