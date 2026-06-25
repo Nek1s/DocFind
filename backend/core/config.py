@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
     debug: bool = False
 
+    # Ограничения загрузки документов (BE-02)
+    max_upload_size: int = 20 * 1024 * 1024  # 20 МБ
+    allowed_extensions: set[str] = {".pdf", ".docx"}
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
