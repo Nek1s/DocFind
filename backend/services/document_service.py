@@ -14,13 +14,16 @@ _MAGIC_BYTES = {
 }
 
 
-def validate_document(filename: str, content: bytes) -> None:
+def validate_document(filename: str | None, content: bytes) -> None:
     """Проверить загружаемый документ. Бросает HTTPException(400) при нарушении.
 
     Проверки: расширение (PDF/DOCX), непустота, размер ≤ лимита, magic bytes.
     """
+    if not filename:
+        raise HTTPException(status_code=400, detail="Имя файла не указано.")
+
     ext = Path(filename).suffix.lower()
-    if ext not in settings.allowed_extensions:
+    if ext not in _MAGIC_BYTES:
         raise HTTPException(
             status_code=400,
             detail=f"Недопустимый формат '{ext or filename}'. Разрешены только PDF и DOCX.",

@@ -55,6 +55,18 @@ def test_docx_wrong_magic_400():
     assert e.value.status_code == 400
 
 
+def test_empty_filename_400():
+    with pytest.raises(HTTPException) as e:
+        validate_document("", PDF_BYTES)
+    assert e.value.status_code == 400
+
+
+def test_none_filename_400():
+    with pytest.raises(HTTPException) as e:
+        validate_document(None, PDF_BYTES)
+    assert e.value.status_code == 400
+
+
 def test_make_document_id_is_uuid():
     val = make_document_id()
     assert isinstance(val, uuid.UUID)
