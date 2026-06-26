@@ -50,7 +50,7 @@ _CONTENT_TYPES = {
 def validate_document(filename: str | None, content: bytes) -> str:
     """Провалидировать документ и вернуть канонический content_type.
 
-    Проверки: имя файла, расширение (PDF/DOCX), непустота, размер ≤ лимита, magic bytes.
+    Проверки: имя файла, расширение (PDF/DOCX), непустота, размер ≤ лимита, содержимое.
     При нарушении бросает `DocumentValidationError`.
     """
     if not filename:

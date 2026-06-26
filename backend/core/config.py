@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # Ограничения загрузки документов (BE-02). Список разрешённых форматов —
-    # единый источник в services.document_service._MAGIC_BYTES.
+    # единый источник в services.document_service._FORMAT_VALIDATORS.
     max_upload_size: int = 20 * 1024 * 1024  # 20 МБ
 
     model_config = SettingsConfigDict(
