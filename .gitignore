@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Рабочий журнал/черновик отчёта (не коммитить)
+backend-journal.md
+WORKFLOW.md
