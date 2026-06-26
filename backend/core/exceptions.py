@@ -12,6 +12,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from services.document_service import DocumentValidationError
+
 
 def _error_response(status_code: int, message: str, detail=None) -> JSONResponse:
     """Сформировать JSON-ответ об ошибке в едином формате."""
@@ -35,6 +37,13 @@ async def validation_exception_handler(
     return _error_response(422, "Ошибка валидации запроса", exc.errors())
 
 
+async def document_validation_handler(
+    request: Request, exc: DocumentValidationError
+) -> JSONResponse:
+    """Доменная ошибка валидации документа → 400 (web-слой не лезет в сервис)."""
+    return _error_response(400, str(exc))
+
+
 async def unhandled_exception_handler(
     request: Request, exc: Exception
 ) -> JSONResponse:
@@ -46,4 +55,5 @@ def register_exception_handlers(app: FastAPI) -> None:
     """Зарегистрировать все глобальные обработчики ошибок в приложении."""
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(DocumentValidationError, document_validation_handler)
     app.add_exception_handler(Exception, unhandled_exception_handler)

@@ -17,10 +17,10 @@ async def upload_document(file: UploadFile) -> UploadResponse:
         raise HTTPException(400, f"Файл превышает максимальный размер {limit_mb} МБ.")
 
     content = await file.read()
-    validate_document(file.filename, content)
+    content_type = validate_document(file.filename, content)
     return UploadResponse(
         id=make_document_id(),
         filename=file.filename,
         size=len(content),
-        content_type=file.content_type or "",
+        content_type=content_type,
     )
