@@ -16,9 +16,10 @@ async def upload_document(file: UploadFile) -> UploadResponse:
     # больше лимита — validate_document отвергнет его по размеру.
     content = await file.read(settings.max_upload_size + 1)
     content_type = validate_document(file.filename, content)
+    # filename здесь гарантированно не None — validate_document отверг бы пустое имя.
     return UploadResponse(
         id=make_document_id(),
-        filename=file.filename,
+        filename=file.filename or "",
         size=len(content),
         content_type=content_type,
     )
