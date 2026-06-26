@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     # единый источник в services.document_service._FORMAT_VALIDATORS.
     max_upload_size: int = 20 * 1024 * 1024  # 20 МБ
 
+    # Elasticsearch (BE-06). URL берётся из окружения (в docker-compose уже задан);
+    # дефолт — для локального запуска без контейнера.
+    elasticsearch_url: str = "http://localhost:9200"
+    es_index_name: str = "documents"
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )

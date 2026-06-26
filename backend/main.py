@@ -5,11 +5,35 @@
 
     uvicorn main:app --reload
 """
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from api.routes import api_router
 from core.config import settings
 from core.exceptions import register_exception_handlers
+from services.elasticsearch import close_es_client, ping
+
+logger = logging.getLogger("docfind")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Жизненный цикл приложения: проверка ES при старте, закрытие при остановке.
+
+    Если ES недоступен — логируем предупреждение и продолжаем (без падения).
+    Создание индекса (BE-06, Спринт 2) будет вызвано здесь после успешного ping.
+    """
+    if await ping():
+        logger.info("Подключение к Elasticsearch установлено (%s).", settings.elasticsearch_url)
+    else:
+        logger.warning(
+            "Elasticsearch недоступен на старте (%s). Приложение продолжит работу.",
+            settings.elasticsearch_url,
+        )
+    yield
+    await close_es_client()
 
 
 def create_app() -> FastAPI:
@@ -18,6 +42,7 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         version=settings.app_version,
         debug=settings.debug,
+        lifespan=lifespan,
     )
 
     register_exception_handlers(app)
