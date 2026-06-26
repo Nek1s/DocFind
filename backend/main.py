@@ -13,7 +13,7 @@ from fastapi import FastAPI
 from api.routes import api_router
 from core.config import settings
 from core.exceptions import register_exception_handlers
-from services.elasticsearch import close_es_client, ping
+from services.elasticsearch import close_es_client, ensure_index, ping
 
 logger = logging.getLogger("docfind")
 
@@ -22,11 +22,20 @@ logger = logging.getLogger("docfind")
 async def lifespan(app: FastAPI):
     """Жизненный цикл приложения: проверка ES при старте, закрытие при остановке.
 
-    Если ES недоступен — логируем предупреждение и продолжаем (без падения).
-    Создание индекса (BE-06, Спринт 2) будет вызвано здесь после успешного ping.
+    Если ES доступен — создаём индекс `documents` (если его нет). Если недоступен
+    или создание не удалось — логируем и продолжаем работу (без падения старта).
     """
     if await ping():
         logger.info("Подключение к Elasticsearch установлено (%s).", settings.elasticsearch_url)
+        try:
+            created = await ensure_index()
+            logger.info(
+                "Индекс '%s' %s.",
+                settings.es_index_name,
+                "создан" if created else "уже существует",
+            )
+        except Exception:
+            logger.exception("Не удалось создать индекс '%s'.", settings.es_index_name)
     else:
         logger.warning(
             "Elasticsearch недоступен на старте (%s). Приложение продолжит работу.",

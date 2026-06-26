@@ -80,3 +80,84 @@ def test_app_starts_even_if_elasticsearch_down(monkeypatch):
     monkeypatch.setattr(main, "ping", _ping_down)
     with TestClient(main.create_app()) as client:
         assert client.get("/api/v1/health").status_code == 200
+
+
+# --- Спринт 2: настройки/маппинг индекса и автосоздание ---------------------
+
+
+def test_index_settings_define_russian_analyzer():
+    """В настройках индекса есть кастомный анализатор 'ru' c русскими фильтрами."""
+    analysis = es.INDEX_SETTINGS["analysis"]
+    ru = analysis["analyzer"]["ru"]
+    assert ru["filter"] == ["lowercase", "russian_stop", "russian_stemmer"]
+    assert analysis["filter"]["russian_stop"]["stopwords"] == "_russian_"
+    assert analysis["filter"]["russian_stemmer"]["language"] == "russian"
+
+
+def test_index_mappings_cover_chunk_fields():
+    """Маппинг описывает поля чанка (BE-07) с корректными типами; text — на 'ru'."""
+    props = es.INDEX_MAPPINGS["properties"]
+    assert props["chunk_id"]["type"] == "keyword"
+    assert props["file_name"]["type"] == "keyword"
+    assert props["page_number"]["type"] == "integer"
+    assert props["text"]["type"] == "text"
+    assert props["text"]["analyzer"] == "ru"
+
+
+class _FakeIndices:
+    """Заглушка namespace client.indices: фиксирует вызов create."""
+
+    def __init__(self, exists: bool):
+        self._exists = exists
+        self.create_kwargs = None
+
+    async def exists(self, index):
+        return self._exists
+
+    async def create(self, *, index, settings, mappings):
+        self.create_kwargs = {"index": index, "settings": settings, "mappings": mappings}
+
+
+class _FakeClientWithIndices:
+    def __init__(self, exists: bool):
+        self.indices = _FakeIndices(exists)
+
+
+def test_ensure_index_skips_when_exists(monkeypatch):
+    fake = _FakeClientWithIndices(exists=True)
+    monkeypatch.setattr(es, "_client", fake)
+    created = asyncio.run(es.ensure_index())
+    assert created is False
+    assert fake.indices.create_kwargs is None
+
+
+def test_ensure_index_creates_when_absent(monkeypatch):
+    fake = _FakeClientWithIndices(exists=False)
+    monkeypatch.setattr(es, "_client", fake)
+    created = asyncio.run(es.ensure_index())
+    assert created is True
+    kwargs = fake.indices.create_kwargs
+    assert kwargs["index"] == settings.es_index_name
+    assert kwargs["settings"] == es.INDEX_SETTINGS
+    assert kwargs["mappings"] == es.INDEX_MAPPINGS
+
+
+def test_startup_creates_index_when_es_available(monkeypatch):
+    """При доступном ES старт приложения вызывает ensure_index()."""
+    import main
+    from fastapi.testclient import TestClient
+
+    calls = []
+
+    async def _ping_up():
+        return True
+
+    async def _ensure():
+        calls.append(True)
+        return True
+
+    monkeypatch.setattr(main, "ping", _ping_up)
+    monkeypatch.setattr(main, "ensure_index", _ensure)
+    with TestClient(main.create_app()) as client:
+        assert client.get("/api/v1/health").status_code == 200
+    assert calls == [True]
