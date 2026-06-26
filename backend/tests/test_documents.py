@@ -5,12 +5,13 @@ from fastapi.testclient import TestClient
 
 from core.config import settings
 from main import create_app
+from tests._util import PDF_BYTES as PDF
+from tests._util import make_docx_bytes
 
 client = TestClient(create_app())
 URL = f"{settings.api_v1_prefix}/documents/upload"
 
-PDF = b"%PDF-1.4\n%pdf body"
-DOCX = b"PK\x03\x04" + b"\x00" * 20
+DOCX = make_docx_bytes()
 
 
 def _upload(name, content, ctype="application/octet-stream"):
@@ -39,8 +40,13 @@ def test_upload_oversize_400():
     assert _upload("big.pdf", big).status_code == 400
 
 
-def test_upload_spoofed_400():
+def test_upload_spoofed_pdf_400():
     assert _upload("fake.pdf", b"not a pdf").status_code == 400
+
+
+def test_upload_spoofed_docx_400():
+    # расширение .docx, содержимое не ZIP
+    assert _upload("fake.docx", b"not a zip").status_code == 400
 
 
 def test_upload_missing_file_422():

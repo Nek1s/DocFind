@@ -1,5 +1,5 @@
 """Маршруты загрузки документов (BE-01)."""
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, UploadFile
 
 from core.config import settings
 from models.schemas import UploadResponse
@@ -11,12 +11,10 @@ router = APIRouter()
 @router.post("/upload", response_model=UploadResponse, summary="Загрузка документа")
 async def upload_document(file: UploadFile) -> UploadResponse:
     """Принять PDF/DOCX, провалидировать и вернуть сгенерированный UUID."""
-    # Ранний отказ по объявленному размеру, чтобы не читать огромный payload в память.
-    if file.size is not None and file.size > settings.max_upload_size:
-        limit_mb = settings.max_upload_size // (1024 * 1024)
-        raise HTTPException(400, f"Файл превышает максимальный размер {limit_mb} МБ.")
-
-    content = await file.read()
+    # Читаем максимум max+1 байт: надёжно ограничивает память независимо от
+    # заголовков клиента (file.size/Content-Length подделываются). Если файл
+    # больше лимита — validate_document отвергнет его по размеру.
+    content = await file.read(settings.max_upload_size + 1)
     content_type = validate_document(file.filename, content)
     return UploadResponse(
         id=make_document_id(),

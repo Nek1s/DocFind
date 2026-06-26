@@ -9,9 +9,9 @@ from services.document_service import (
     make_document_id,
     validate_document,
 )
+from tests._util import PDF_BYTES, make_docx_bytes, make_zip_without_word
 
-PDF_BYTES = b"%PDF-1.4\n%real pdf content"
-DOCX_BYTES = b"PK\x03\x04" + b"\x00" * 20  # zip-сигнатура DOCX
+DOCX_BYTES = make_docx_bytes()
 
 
 def test_valid_pdf_returns_pdf_content_type():
@@ -51,9 +51,15 @@ def test_spoofed_magic_bytes_rejected():
         validate_document("fake.pdf", b"this is not a pdf")
 
 
-def test_docx_wrong_magic_rejected():
+def test_docx_not_a_zip_rejected():
     with pytest.raises(DocumentValidationError):
         validate_document("fake.docx", b"not a zip")
+
+
+def test_docx_zip_without_word_rejected():
+    # валидный zip (напр. .xlsx), но без word/document.xml — не DOCX
+    with pytest.raises(DocumentValidationError):
+        validate_document("fake.docx", make_zip_without_word())
 
 
 def test_empty_filename_rejected():
