@@ -4,9 +4,11 @@
 сегменты фиксированной длины с перекрытием соседних чанков.
 Спринт 2 — извлечение (BE-04): `extract_pages` достаёт текст из PDF (pdfplumber)
 и DOCX (python-docx) постранично.
+Спринт 3 — связка: `iter_chunks` режет текст каждой страницы на чанки и
+сохраняет номер страницы — готовый поток для индексации (BE-07).
 """
 import io
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -28,6 +30,14 @@ class PageText:
 
     page_number: int
     text: str
+
+
+@dataclass(frozen=True)
+class Chunk:
+    """Чанк текста с номером страницы-источника — единица индексации (BE-07)."""
+
+    text: str
+    page_number: int
 
 
 def chunk_text(text: str, size: int = 1000, overlap: int = 100) -> Iterator[str]:
@@ -88,3 +98,20 @@ def _extract_docx(content: bytes) -> list[PageText]:
         raise TextExtractionError(f"Не удалось прочитать DOCX: {exc}") from exc
     text = "\n".join(p.text for p in document.paragraphs)
     return [PageText(1, text)]
+
+
+def iter_chunks(
+    pages: Iterable[PageText], size: int = 1000, overlap: int = 100
+) -> Iterator[Chunk]:
+    """Превратить страницы в плоский поток чанков с номером страницы (BE-04/05).
+
+    Текст каждой страницы режется `chunk_text` на сегменты `size`/`overlap`,
+    каждый чанк наследует `page_number` своей страницы. Пустые страницы не дают
+    чанков. Порядок сохраняется: чанки страницы N идут до чанков страницы N+1.
+
+    Глобальный порядковый `chunk_id` присваивает слой индексации (BE-07): ему
+    нужен UUID документа, которого здесь нет.
+    """
+    for page in pages:
+        for piece in chunk_text(page.text, size, overlap):
+            yield Chunk(piece, page.page_number)

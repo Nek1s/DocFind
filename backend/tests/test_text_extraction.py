@@ -10,10 +10,12 @@ import docx
 import pytest
 
 from services.text_extraction import (
+    Chunk,
     PageText,
     TextExtractionError,
     chunk_text,
     extract_pages,
+    iter_chunks,
 )
 
 SAMPLE_PDF = (Path(__file__).parent / "fixtures" / "sample.pdf").read_bytes()
@@ -110,3 +112,38 @@ def test_corrupt_pdf_raises_extraction_error():
 def test_corrupt_docx_raises_extraction_error():
     with pytest.raises(TextExtractionError):
         extract_pages("broken.docx", b"PK\x03\x04 not a docx")
+
+
+# --- BE-04/05: связка extract + chunk ---
+
+
+def test_iter_chunks_attaches_page_number():
+    pages = [PageText(1, "abc"), PageText(2, "xyz")]
+    chunks = list(iter_chunks(pages, size=10, overlap=3))
+    assert chunks == [Chunk("abc", 1), Chunk("xyz", 2)]
+
+
+def test_iter_chunks_splits_long_page_keeping_page_number():
+    pages = [PageText(5, "0123456789ABCDEFGHIJ")]  # 20 символов
+    chunks = list(iter_chunks(pages, size=10, overlap=3))
+    assert [c.text for c in chunks] == ["0123456789", "789ABCDEFG", "EFGHIJ"]
+    assert all(c.page_number == 5 for c in chunks)
+
+
+def test_iter_chunks_skips_empty_pages():
+    pages = [PageText(1, "abc"), PageText(2, ""), PageText(3, "def")]
+    chunks = list(iter_chunks(pages, size=10, overlap=3))
+    assert [c.page_number for c in chunks] == [1, 3]
+
+
+def test_iter_chunks_preserves_page_order():
+    pages = [PageText(1, "aaa"), PageText(2, "bbb")]
+    chunks = list(iter_chunks(pages, size=10, overlap=3))
+    assert [c.page_number for c in chunks] == [1, 2]
+
+
+def test_iter_chunks_defaults_match_be05():
+    pages = [PageText(1, "x" * 2500)]
+    chunks = list(iter_chunks(pages))
+    assert len(chunks[0].text) == 1000
+    assert chunks[1].text == "x" * 1000  # шаг 900, всё ещё 'x'
