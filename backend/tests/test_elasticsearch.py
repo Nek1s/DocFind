@@ -4,11 +4,21 @@ ES в тестах не поднимаем — клиент мокаем, поэ
 Асинхронные функции вызываем через asyncio.run, чтобы не тянуть pytest-asyncio.
 """
 import asyncio
+from unittest.mock import patch
 
-from elasticsearch import AsyncElasticsearch
+from elasticsearch import AsyncElasticsearch, BadRequestError
+from elastic_transport import ApiResponseMeta, HttpHeaders
 
 import services.elasticsearch as es
 from core.config import settings
+
+
+def _bad_request(message: str) -> BadRequestError:
+    """Собрать настоящий BadRequestError с заданным типом ошибки ES (для тестов гонки)."""
+    meta = ApiResponseMeta(
+        status=400, http_version="1.1", headers=HttpHeaders({}), duration=0.0, node=None
+    )
+    return BadRequestError(message, meta=meta, body={})
 
 
 def teardown_function() -> None:
@@ -25,12 +35,17 @@ def test_get_es_client_is_singleton():
 
 
 def test_get_es_client_uses_url_from_settings(monkeypatch):
-    """Хост клиента берётся из settings.elasticsearch_url."""
+    """Клиент создаётся с хостом из settings.elasticsearch_url.
+
+    Проверяем поведенчески — какой URL передан конструктору AsyncElasticsearch,
+    а не внутренности transport.node_pool (это internal API библиотеки).
+    """
     monkeypatch.setattr(settings, "elasticsearch_url", "http://es.example:9200")
     asyncio.run(es.close_es_client())  # сбросить, чтобы клиент пересоздался с новым URL
-    client = es.get_es_client()
-    hosts = [str(node.base_url) for node in client.transport.node_pool.all()]
-    assert any("es.example:9200" in h for h in hosts)
+    with patch.object(es, "AsyncElasticsearch") as mock_cls:
+        es.get_es_client()
+    mock_cls.assert_called_once_with(hosts=["http://es.example:9200"])
+    es._client = None  # синглтон держит mock — сбрасываем, чтобы teardown не звал close()
 
 
 class _FakeClient:
@@ -105,10 +120,11 @@ def test_index_mappings_cover_chunk_fields():
 
 
 class _FakeIndices:
-    """Заглушка namespace client.indices: фиксирует вызов create."""
+    """Заглушка namespace client.indices: фиксирует вызов create, может бросать ошибку."""
 
-    def __init__(self, exists: bool):
+    def __init__(self, exists: bool, create_error: Exception | None = None):
         self._exists = exists
+        self._create_error = create_error
         self.create_kwargs = None
 
     async def exists(self, index):
@@ -116,11 +132,13 @@ class _FakeIndices:
 
     async def create(self, *, index, settings, mappings):
         self.create_kwargs = {"index": index, "settings": settings, "mappings": mappings}
+        if self._create_error is not None:
+            raise self._create_error
 
 
 class _FakeClientWithIndices:
-    def __init__(self, exists: bool):
-        self.indices = _FakeIndices(exists)
+    def __init__(self, exists: bool, create_error: Exception | None = None):
+        self.indices = _FakeIndices(exists, create_error)
 
 
 def test_ensure_index_skips_when_exists(monkeypatch):
@@ -140,6 +158,31 @@ def test_ensure_index_creates_when_absent(monkeypatch):
     assert kwargs["index"] == settings.es_index_name
     assert kwargs["settings"] == es.INDEX_SETTINGS
     assert kwargs["mappings"] == es.INDEX_MAPPINGS
+
+
+def test_ensure_index_handles_concurrent_create_race(monkeypatch):
+    """Гонка: другой воркер уже создал индекс между exists и create.
+
+    ES отвечает resource_already_exists_exception (BadRequestError) — это не ошибка,
+    индекс есть. ensure_index должна вернуть False, не пробрасывая исключение.
+    """
+    race = _bad_request("resource_already_exists_exception")
+    fake = _FakeClientWithIndices(exists=False, create_error=race)
+    monkeypatch.setattr(es, "_client", fake)
+    assert asyncio.run(es.ensure_index()) is False
+
+
+def test_ensure_index_reraises_other_bad_request(monkeypatch):
+    """Прочие BadRequestError (например, некорректные настройки) — пробрасываем."""
+    other = _bad_request("illegal_argument_exception")
+    fake = _FakeClientWithIndices(exists=False, create_error=other)
+    monkeypatch.setattr(es, "_client", fake)
+    try:
+        asyncio.run(es.ensure_index())
+        raised = False
+    except BadRequestError:
+        raised = True
+    assert raised is True
 
 
 def test_startup_creates_index_when_es_available(monkeypatch):

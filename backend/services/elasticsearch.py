@@ -8,9 +8,13 @@
 """
 from __future__ import annotations
 
-from elasticsearch import AsyncElasticsearch
+import logging
+
+from elasticsearch import AsyncElasticsearch, BadRequestError
 
 from core.config import settings
+
+logger = logging.getLogger("docfind")
 
 # Единственный экземпляр клиента на процесс. None — ещё не создан / уже закрыт.
 _client: AsyncElasticsearch | None = None
@@ -74,6 +78,9 @@ async def ping() -> bool:
     try:
         return await get_es_client().ping()
     except Exception:
+        # Причину (в т.ч. не сетевую — ошибку конфигурации клиента) сохраняем в
+        # debug-лог: наверх отдаём только bool, но трейс для диагностики не теряем.
+        logger.debug("Ping Elasticsearch завершился ошибкой", exc_info=True)
         return False
 
 
@@ -81,13 +88,23 @@ async def ensure_index() -> bool:
     """Создать индекс `documents`, если его ещё нет. Идемпотентна.
 
     Возвращает True, если индекс был создан, False — если уже существовал.
+
+    Проверка `exists` и `create` — два отдельных запроса, поэтому при конкурентном
+    старте (несколько воркеров) индекс может появиться между ними. ES вернёт на
+    `create` ошибку `resource_already_exists_exception` — трактуем её как «индекс
+    уже есть» (False), а не как сбой.
     """
     client = get_es_client()
     if await client.indices.exists(index=settings.es_index_name):
         return False
-    await client.indices.create(
-        index=settings.es_index_name,
-        settings=INDEX_SETTINGS,
-        mappings=INDEX_MAPPINGS,
-    )
+    try:
+        await client.indices.create(
+            index=settings.es_index_name,
+            settings=INDEX_SETTINGS,
+            mappings=INDEX_MAPPINGS,
+        )
+    except BadRequestError as exc:
+        if exc.error == "resource_already_exists_exception":
+            return False
+        raise
     return True
