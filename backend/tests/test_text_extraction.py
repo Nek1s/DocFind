@@ -1,10 +1,32 @@
 """Тесты сервиса извлечения и чанкирования текста (BE-04, BE-05).
 
 Спринт 1 — чанкирование (BE-05): генератор `chunk_text`.
+Спринт 2 — извлечение (BE-04): `extract_pages` для PDF/DOCX.
 """
+import io
+from pathlib import Path
+
+import docx
 import pytest
 
-from services.text_extraction import chunk_text
+from services.text_extraction import (
+    PageText,
+    TextExtractionError,
+    chunk_text,
+    extract_pages,
+)
+
+SAMPLE_PDF = (Path(__file__).parent / "fixtures" / "sample.pdf").read_bytes()
+
+
+def _make_docx(*paragraphs: str) -> bytes:
+    """Собрать валидный DOCX с заданными абзацами (через сам python-docx)."""
+    doc = docx.Document()
+    for p in paragraphs:
+        doc.add_paragraph(p)
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
 
 
 def test_short_text_returns_single_chunk():
@@ -48,3 +70,43 @@ def test_overlap_not_less_than_size_raises():
 def test_negative_overlap_raises():
     with pytest.raises(ValueError):
         list(chunk_text("abc", size=10, overlap=-1))
+
+
+# --- BE-04: извлечение текста ---
+
+
+def test_extract_pdf_returns_text_per_page():
+    pages = extract_pages("lecture.pdf", SAMPLE_PDF)
+    assert [p.page_number for p in pages] == [1, 2, 3]
+    assert "алгоритмы" in pages[0].text
+    assert "структуры данных" in pages[1].text
+    assert pages[2].text == ""  # пустая страница без текстового слоя
+
+
+def test_extract_docx_joins_paragraphs_on_single_page():
+    content = _make_docx("Первый абзац", "Второй абзац")
+    pages = extract_pages("notes.docx", content)
+    assert len(pages) == 1
+    assert pages[0].page_number == 1
+    assert "Первый абзац" in pages[0].text
+    assert "Второй абзац" in pages[0].text
+
+
+def test_extract_returns_pagetext_objects():
+    pages = extract_pages("notes.docx", _make_docx("текст"))
+    assert isinstance(pages[0], PageText)
+
+
+def test_unsupported_extension_raises():
+    with pytest.raises(ValueError):
+        extract_pages("data.txt", b"plain")
+
+
+def test_corrupt_pdf_raises_extraction_error():
+    with pytest.raises(TextExtractionError):
+        extract_pages("broken.pdf", b"%PDF-1.4 not really a pdf")
+
+
+def test_corrupt_docx_raises_extraction_error():
+    with pytest.raises(TextExtractionError):
+        extract_pages("broken.docx", b"PK\x03\x04 not a docx")
