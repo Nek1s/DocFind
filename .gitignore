@@ -220,3 +220,6 @@ __marimo__/
 # Рабочий журнал/черновик отчёта (не коммитить)
 backend-journal.md
 WORKFLOW.md
+
+# Тестовый файл >20 МБ (QA-03) — собирается генератором по требованию, не храним
+backend/tests/fixtures/negative/oversized.pdf

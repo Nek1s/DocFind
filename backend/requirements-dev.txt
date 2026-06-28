@@ -1,0 +1,7 @@
+# Зависимости для разработки/тестов, не нужные в рантайме приложения.
+-r requirements.txt
+
+# Генерация набора тестовых документов (QA-03):
+# tests/fixtures/generate_fixtures.py использует Pillow для картинок и PDF-сканов
+# (python-docx уже в requirements.txt).
+Pillow==12.2.0
