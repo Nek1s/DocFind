@@ -1,0 +1,17 @@
+.view {
+  padding: 24px 28px 28px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 2px 12px;
+}
+
+.toolbarLabel {
+  font: 600 12px var(--font-sans);
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+}

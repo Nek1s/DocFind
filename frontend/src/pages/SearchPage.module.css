@@ -1,0 +1,36 @@
+.view {
+  padding: 24px 28px 28px;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 56px 24px;
+}
+
+.icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--surface-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--clay-emphasized);
+}
+
+.title {
+  font: 600 17px var(--font-sans);
+  color: var(--text-primary);
+  margin-top: 16px;
+  letter-spacing: -0.01em;
+}
+
+.hint {
+  font: 400 14px/1.5 var(--font-sans);
+  color: var(--text-muted);
+  margin-top: 6px;
+  max-width: 380px;
+}

@@ -1,0 +1,112 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+}
+
+.row:not(:first-child) {
+  border-top: 0.5px solid var(--border-faint);
+}
+
+.iconWrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ext {
+  font: 600 9.5px var(--font-sans);
+  letter-spacing: 0.04em;
+  border-radius: 4px;
+  padding: 2px 5px;
+  flex-shrink: 0;
+}
+
+/* Тема по типу файла (применяется и к иконке, и к ext-бейджу) */
+.pdf {
+  color: var(--clay-emphasized);
+  background: var(--surface-secondary);
+}
+
+.docx {
+  color: var(--info-emphasized);
+  background: rgba(45, 114, 217, 0.1);
+}
+
+.other {
+  color: var(--text-muted);
+  background: var(--surface-active);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name {
+  font: 500 14px var(--font-sans);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+}
+
+.metaText {
+  font: 400 12px var(--font-sans);
+  color: var(--text-muted);
+}
+
+.dot {
+  font: 400 12px var(--font-sans);
+  color: var(--gray-350);
+}
+
+.errorRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--danger-emphasized);
+}
+
+.errorText {
+  font: 400 12px var(--font-sans);
+}
+
+.remove {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s var(--ease-out);
+}
+
+.remove:hover {
+  background: var(--surface-hover);
+  color: var(--danger-emphasized);
+}
