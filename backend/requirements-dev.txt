@@ -5,3 +5,6 @@
 # tests/fixtures/generate_fixtures.py использует Pillow для картинок и PDF-сканов
 # (python-docx уже в requirements.txt).
 Pillow==12.2.0
+
+# Измерение покрытия тестами (QA-01).
+pytest-cov==7.1.0
