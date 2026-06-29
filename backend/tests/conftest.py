@@ -32,3 +32,13 @@ def oversized_pdf_bytes() -> bytes:
     чтобы проверять отбраковку по размеру без раздувания git.
     """
     return b"%PDF-1.4\n" + b"\x00" * (settings.max_upload_size + 1)
+
+
+@pytest.fixture
+def max_size_pdf_bytes() -> bytes:
+    """Валидный PDF ровно в лимит загрузки (BE-02) — граничный «проходной» случай.
+
+    Проверка размера строгая (`>` лимита), поэтому файл ровно в лимит проходит.
+    """
+    header = b"%PDF-1.4\n"
+    return header + b"\x00" * (settings.max_upload_size - len(header))

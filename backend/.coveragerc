@@ -1,0 +1,13 @@
+# Измерение покрытия тестами (QA-01).
+# Меряем код приложения; сами тесты и генератор фикстур из охвата исключаем.
+[run]
+source = .
+omit =
+    tests/*
+    .venv/*
+
+[report]
+show_missing = True
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
