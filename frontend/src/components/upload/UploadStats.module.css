@@ -1,0 +1,37 @@
+.strip {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.plate {
+  flex: 1;
+  background: #fff;
+  border: 0.5px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 13px 16px;
+}
+
+.value {
+  font: 600 22px var(--font-sans);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.total {
+  color: var(--text-primary);
+}
+
+.valid {
+  color: var(--success-emphasized);
+}
+
+.error {
+  color: var(--danger-emphasized);
+}
+
+.label {
+  font: 400 11.5px var(--font-sans);
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}

@@ -1,0 +1,27 @@
+.page {
+  min-height: 100vh;
+  padding: 40px 24px;
+  display: flex;
+  justify-content: center;
+  background: var(--page-bg);
+}
+
+.shell {
+  width: 100%;
+  max-width: 940px;
+}
+
+.card {
+  background: var(--ivory);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 14px;
+  font: 400 11.5px var(--font-sans);
+  color: var(--gray-500);
+}
