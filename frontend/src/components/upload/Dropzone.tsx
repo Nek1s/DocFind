@@ -22,7 +22,11 @@ export function Dropzone({ onFiles }: DropzoneProps) {
 
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault()
-    setDragOver(false)
+    // dragleave стреляет и при заходе курсора на дочерние элементы зоны.
+    // Сбрасываем подсветку, только когда курсор реально покинул зону.
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOver(false)
+    }
   }
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
