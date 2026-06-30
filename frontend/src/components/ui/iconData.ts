@@ -39,6 +39,18 @@ export const ICON_DATA = {
     viewBox: `0 0 20 20`,
     body: `<path d="M 14.5 0 C 15.328 0 16 0.672 16 1.5 L 16 12.5 C 16 13.328 15.328 14 14.5 14 L 1.5 14 C 0.672 14 0 13.328 0 12.5 L 0 3.5 C 0 2.672 0.672 2 1.5 2 L 8.793 2 L 10.354 0.439 L 10.464 0.34 C 10.731 0.121 11.066 0 11.414 0 L 14.5 0 Z M 11.414 1 C 11.315 1 11.218 1.03 11.137 1.084 L 11.061 1.146 L 9.354 2.854 C 9.26 2.947 9.133 3 9 3 L 1.5 3 C 1.224 3 1 3.224 1 3.5 L 1 12.5 C 1 12.776 1.224 13 1.5 13 L 14.5 13 C 14.776 13 15 12.776 15 12.5 L 15 1.5 C 15 1.224 14.776 1 14.5 1 L 11.414 1 Z" fill="currentColor" fill-rule="nonzero" transform="matrix(1 0 0 1 2 3)"/>`,
   },
+  // Галочка (статус «Готово»). Штриховой глиф — Icon рендерит svg с fill="none",
+  // поэтому используем stroke=currentColor.
+  Check: {
+    viewBox: `0 0 20 20`,
+    body: `<path d="M 5 10.5 L 8.4 14 L 15 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`,
+  },
+  // Кольцо-спиннер (статусы «Загрузка»/«Индексация»). ~270°-дуга с разрывом;
+  // вращается CSS-анимацией на стороне потребителя.
+  Loader: {
+    viewBox: `0 0 20 20`,
+    body: `<path d="M 10 3 A 7 7 0 1 1 3 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>`,
+  },
 } satisfies Record<string, IconGlyph>
 
 export type IconName = keyof typeof ICON_DATA

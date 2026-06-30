@@ -1,4 +1,5 @@
 import { Icon } from '@/components/ui/Icon'
+import type { IconName } from '@/components/ui/iconData'
 import { Badge } from '@/components/ui/Badge'
 import type { BadgeVariant } from '@/components/ui/Badge'
 import { ProgressBar } from '@/components/ui/ProgressBar'
@@ -17,17 +18,30 @@ function fileKind(ext: string): 'pdf' | 'docx' | 'other' {
   return 'other'
 }
 
-/** Бейдж статуса: вариант оформления + подпись по состоянию обработки. */
-function statusBadge(file: UploadFile): { variant: BadgeVariant; label: string } {
+interface StatusBadge {
+  variant: BadgeVariant
+  label: string
+  icon: IconName
+  /** Иконка вращается (для статусов «в процессе»). */
+  spin: boolean
+}
+
+/** Бейдж статуса: оформление, иконка и подпись по состоянию обработки. */
+function statusBadge(file: UploadFile): StatusBadge {
   switch (file.status) {
     case 'uploading':
-      return { variant: 'info', label: `Загрузка ${Math.round(file.progress ?? 0)}%` }
+      return {
+        variant: 'info',
+        label: `Загрузка ${Math.round(file.progress ?? 0)}%`,
+        icon: 'Loader',
+        spin: true,
+      }
     case 'indexing':
-      return { variant: 'brand', label: 'Индексация' }
+      return { variant: 'brand', label: 'Индексация', icon: 'Loader', spin: true }
     case 'done':
-      return { variant: 'success', label: 'Готово' }
+      return { variant: 'success', label: 'Готово', icon: 'Check', spin: false }
     case 'error':
-      return { variant: 'danger', label: 'Ошибка' }
+      return { variant: 'danger', label: 'Ошибка', icon: 'Warning', spin: false }
   }
 }
 
@@ -74,7 +88,10 @@ export function FileRow({ file, onRemove }: FileRowProps) {
         )}
       </div>
 
-      <Badge variant={badge.variant}>{badge.label}</Badge>
+      <Badge variant={badge.variant}>
+        <Icon name={badge.icon} size={12} className={badge.spin ? styles.spin : undefined} />
+        {badge.label}
+      </Badge>
 
       <button
         type="button"
