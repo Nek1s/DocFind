@@ -84,6 +84,18 @@
   max-width: 360px;
 }
 
+/* Вращение иконки-спиннера в статус-бейдже («Загрузка»/«Индексация»). */
+.spin {
+  transform-origin: center;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .errorRow {
   display: flex;
   align-items: center;
