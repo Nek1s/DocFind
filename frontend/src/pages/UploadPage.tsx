@@ -15,7 +15,8 @@ export function UploadPage() {
   const counts = useMemo(
     () => ({
       total: files.length,
-      valid: files.filter((f) => f.status === 'valid').length,
+      done: files.filter((f) => f.status === 'done').length,
+      processing: files.filter((f) => f.status === 'uploading' || f.status === 'indexing').length,
       error: files.filter((f) => f.status === 'error').length,
     }),
     [files],
@@ -37,7 +38,12 @@ export function UploadPage() {
   return (
     <div className={styles.view}>
       <Dropzone onFiles={addFiles} />
-      <UploadStats total={counts.total} valid={counts.valid} error={counts.error} />
+      <UploadStats
+        total={counts.total}
+        done={counts.done}
+        processing={counts.processing}
+        error={counts.error}
+      />
       <div className={styles.toolbar}>
         <span className={styles.toolbarLabel}>ДОКУМЕНТЫ</span>
         <FileFilters value={filter} onChange={setFilter} />

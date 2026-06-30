@@ -22,8 +22,12 @@
   color: var(--text-primary);
 }
 
-.valid {
+.done {
   color: var(--success-emphasized);
+}
+
+.processing {
+  color: var(--clay-emphasized);
 }
 
 .error {

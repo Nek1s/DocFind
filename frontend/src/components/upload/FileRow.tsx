@@ -1,7 +1,9 @@
 import { Icon } from '@/components/ui/Icon'
 import { Badge } from '@/components/ui/Badge'
+import type { BadgeVariant } from '@/components/ui/Badge'
+import { ProgressBar } from '@/components/ui/ProgressBar'
 import { cn } from '@/lib/cn'
-import type { UploadFile } from '@/lib/types'
+import type { FileStatus, UploadFile } from '@/lib/types'
 import styles from './FileRow.module.css'
 
 interface FileRowProps {
@@ -15,10 +17,25 @@ function fileKind(ext: string): 'pdf' | 'docx' | 'other' {
   return 'other'
 }
 
+/** Бейдж статуса: вариант оформления + подпись по состоянию обработки. */
+function statusBadge(file: UploadFile): { variant: BadgeVariant; label: string } {
+  switch (file.status) {
+    case 'uploading':
+      return { variant: 'info', label: `Загрузка ${Math.round(file.progress ?? 0)}%` }
+    case 'indexing':
+      return { variant: 'brand', label: 'Индексация' }
+    case 'done':
+      return { variant: 'success', label: 'Готово' }
+    case 'error':
+      return { variant: 'danger', label: 'Ошибка' }
+  }
+}
+
 export function FileRow({ file, onRemove }: FileRowProps) {
   const kind = fileKind(file.ext)
   const extLabel = file.ext ? file.ext.toUpperCase() : 'FILE'
-  const isError = file.status === 'error'
+  const badge = statusBadge(file)
+  const status: FileStatus = file.status
 
   return (
     <div className={styles.row}>
@@ -38,7 +55,18 @@ export function FileRow({ file, onRemove }: FileRowProps) {
           <span className={styles.dot}>·</span>
           <span className={styles.metaText}>{file.sizeLabel}</span>
         </div>
-        {isError && file.error && (
+
+        {status === 'uploading' && (
+          <div className={styles.progress}>
+            <ProgressBar value={file.progress ?? 0} color="var(--info)" />
+          </div>
+        )}
+        {status === 'indexing' && (
+          <div className={styles.progress}>
+            <ProgressBar indeterminate />
+          </div>
+        )}
+        {status === 'error' && file.error && (
           <div className={styles.errorRow}>
             <Icon name="Warning" size={13} />
             <span className={styles.errorText}>{file.error}</span>
@@ -46,9 +74,7 @@ export function FileRow({ file, onRemove }: FileRowProps) {
         )}
       </div>
 
-      <Badge variant={isError ? 'danger' : 'success'}>
-        {isError ? 'Ошибка' : 'Готов к загрузке'}
-      </Badge>
+      <Badge variant={badge.variant}>{badge.label}</Badge>
 
       <button
         type="button"

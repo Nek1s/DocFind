@@ -1,0 +1,35 @@
+.track {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--gray-200);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Определённый прогресс: ширина задаётся inline-стилем (динамическое значение). */
+.fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.18s var(--ease-out);
+}
+
+/* Неопределённый прогресс (индексация): бегущий сегмент. */
+.indeterminate {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 38%;
+  border-radius: 9999px;
+  background: var(--clay);
+  animation: indet 1.1s var(--ease-standard) infinite;
+}
+
+@keyframes indet {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(280%);
+  }
+}
