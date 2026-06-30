@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import styles from './Badge.module.css'
 
-export type BadgeVariant = 'success' | 'danger'
+export type BadgeVariant = 'success' | 'danger' | 'info' | 'brand'
 
 interface BadgeProps {
   variant: BadgeVariant

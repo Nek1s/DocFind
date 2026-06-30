@@ -79,6 +79,11 @@
   color: var(--gray-350);
 }
 
+.progress {
+  margin-top: 9px;
+  max-width: 360px;
+}
+
 .errorRow {
   display: flex;
   align-items: center;

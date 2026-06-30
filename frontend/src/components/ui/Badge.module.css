@@ -20,3 +20,13 @@
   background: rgba(167, 61, 57, 0.1);
   color: var(--danger-emphasized);
 }
+
+.info {
+  background: rgba(44, 132, 219, 0.1);
+  color: var(--info-emphasized);
+}
+
+.brand {
+  background: rgba(217, 119, 87, 0.12);
+  color: var(--clay-emphasized);
+}

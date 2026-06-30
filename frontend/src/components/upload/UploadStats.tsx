@@ -3,14 +3,17 @@ import styles from './UploadStats.module.css'
 
 interface UploadStatsProps {
   total: number
-  valid: number
+  done: number
+  /** Файлы в обработке: uploading + indexing. */
+  processing: number
   error: number
 }
 
-export function UploadStats({ total, valid, error }: UploadStatsProps) {
+export function UploadStats({ total, done, processing, error }: UploadStatsProps) {
   const plates = [
     { key: 'total', value: total, label: 'всего', tone: styles.total },
-    { key: 'valid', value: valid, label: 'готово', tone: styles.valid },
+    { key: 'done', value: done, label: 'готово', tone: styles.done },
+    { key: 'processing', value: processing, label: 'в обработке', tone: styles.processing },
     { key: 'error', value: error, label: 'с ошибкой', tone: styles.error },
   ]
 
