@@ -24,6 +24,17 @@ class Settings(BaseSettings):
     elasticsearch_url: str = "http://localhost:9200"
     es_index_name: str = "documents"
 
+    # CORS (BE-05). Разрешённые источники фронтенда для междоменных запросов:
+    # Compose (nginx :80) и Vite dev-сервер (:5173). Через nginx запросы same-origin,
+    # но dev-режим ходит кросс-доменно. Переопределяется из окружения (JSON-массив).
+    cors_origins: list[str] = [
+        "http://localhost",
+        "http://localhost:80",
+        "http://localhost:5173",
+        "http://127.0.0.1",
+        "http://127.0.0.1:5173",
+    ]
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )

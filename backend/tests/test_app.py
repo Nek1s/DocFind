@@ -46,3 +46,21 @@ def test_500_envelope():
     resp = _client(raise_server_exceptions=False).get("/_boom_500")
     assert resp.status_code == 500
     assert resp.json()["error"]["code"] == 500
+
+
+def test_cors_preflight_allows_frontend_origin():
+    """Preflight с разрешённого origin получает заголовок Access-Control-Allow-Origin."""
+    resp = _client().options(
+        "/api/v1/documents/upload",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert resp.headers.get("access-control-allow-origin") == "http://localhost:5173"
+
+
+def test_cors_blocks_unknown_origin():
+    """Запрос с чужого origin не получает CORS-заголовок (список реально ограничивает)."""
+    resp = _client().get("/api/v1/health", headers={"Origin": "http://evil.example"})
+    assert "access-control-allow-origin" not in resp.headers
