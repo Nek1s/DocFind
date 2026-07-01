@@ -25,11 +25,11 @@ class Settings(BaseSettings):
     es_index_name: str = "documents"
 
     # CORS (BE-05). Разрешённые источники фронтенда для междоменных запросов:
-    # Compose (nginx :80) и Vite dev-сервер (:5173). Через nginx запросы same-origin,
-    # но dev-режим ходит кросс-доменно. Переопределяется из окружения (JSON-массив).
+    # Compose (nginx :80 → браузер шлёт Origin без порта) и Vite dev-сервер (:5173).
+    # Через прокси запросы same-origin, но dev/прямые вызовы ходят кросс-доменно.
+    # Переопределяется из окружения (JSON-массив).
     cors_origins: list[str] = [
         "http://localhost",
-        "http://localhost:80",
         "http://localhost:5173",
         "http://127.0.0.1",
         "http://127.0.0.1:5173",
