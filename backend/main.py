@@ -9,6 +9,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import api_router
 from core.config import settings
@@ -52,6 +53,15 @@ def create_app() -> FastAPI:
         version=settings.app_version,
         debug=settings.debug,
         lifespan=lifespan,
+    )
+
+    # CORS (BE-05): разрешаем междоменные запросы фронтенда (Vite dev / Compose).
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     register_exception_handlers(app)
